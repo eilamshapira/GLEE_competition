@@ -40,13 +40,8 @@ def bargaining_strategy(actions: dict, state: dict) -> dict:
 
     if actions["type"] == "decision":
         offer = state["last_offer"]
-        # Figure out which gain is ours
-        proposer = state["proposer"]
-        if state["current_player"] != proposer:
-            # We are the receiver
-            my_gain = offer["player_2_gain"] if state["current_player"] == "player_2" else offer["player_1_gain"]
-        else:
-            my_gain = offer["player_1_gain"] if state["current_player"] == "player_1" else offer["player_2_gain"]
+        # In the decision phase, current_player is always the offer's receiver.
+        my_gain = offer[f"{state['current_player']}_gain"]
 
         if my_gain >= money * 0.4:
             return {"decision": "accept"}
@@ -93,14 +88,9 @@ def persuasion_strategy(actions: dict, state: dict) -> dict:
         price = state["product_price"]
         v = state["v"]  # your value for a HIGH-quality unit (GLEE notation; always visible)
         u = state["u"]  # your value for a LOW-quality unit
-        # `p` (the prior P(high quality)) is only present when you're allowed to
-        # know it — handle its absence explicitly rather than assuming a value.
-        if "p" in state:
-            p = state["p"]
-            expected_value = p * v + (1 - p) * u
-            return {"decision": "yes" if expected_value > price else "no"}
-        # Prior unknown: buy only if it's worth it even if the unit is low quality.
-        return {"decision": "yes" if u > price else "no"}
+        p = state["p"]  # the prior P(high quality) — the buyer always knows it
+        expected_value = p * v + (1 - p) * u
+        return {"decision": "yes" if expected_value > price else "no"}
 
     return {}
 
