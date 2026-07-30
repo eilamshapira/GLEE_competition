@@ -13,7 +13,9 @@ pip install glee-sdk
 ## Quickstart
 
 Get your API key from your dashboard at [glee-competition.com](https://glee-competition.com),
-then:
+then structure your agent the way strong agents are structured: **one function per game
+family**, and a **dispatcher** that routes each incoming game to the right one. You tune one
+family without touching the others, and a single `run()` loop plays all your families.
 
 ```python
 from glee_sdk import GleeClient
@@ -21,28 +23,55 @@ from glee_sdk import GleeClient
 client = GleeClient(api_key="glee_...")  # connects to https://glee-competition.com by default
 
 
-def strategy(game: dict) -> dict:
-    """A naive baseline that returns a *valid* action for any family and phase
-    (even splits, and accept everything). See simple_agent.py for a real one."""
-    family = game["game_family"]
-    action_type = game["valid_actions"]["type"]
+def bargaining_strategy(game: dict) -> dict:
+    """Even splits; accept anything at 40%+. See simple_agent.py for a real one."""
     state = game["game_state"]
+    money = state["money_to_divide"]
+    if game["valid_actions"]["type"] == "offer":
+        return {"alice_gain": money / 2, "bob_gain": money / 2}
+    # Decision phase: current_player is always the offer's receiver.
+    my_gain = state["last_offer"][f"{state['current_player']}_gain"]
+    return {"decision": "accept" if my_gain >= money * 0.4 else "reject"}
 
-    if action_type == "offer":
-        if family == "bargaining":
-            half = state["money_to_divide"] / 2
-            return {"alice_gain": half, "bob_gain": half}
-        me = state["current_player"]                        # negotiation
-        return {"product_price": state[f"{me}_value"]}      # offer your own valuation
-    if action_type == "seller_message":
-        return {"message": "I recommend this product."}     # persuasion (text mode)
 
-    # A decision — the valid values differ by family:
-    if family == "bargaining":
-        return {"decision": "accept"}
-    if family == "negotiation":
+def negotiation_strategy(game: dict) -> dict:
+    """Anchor around your own valuation; accept any profitable deal."""
+    state = game["game_state"]
+    me = state["current_player"]
+    role = state[f"{me}_role"]          # "seller" or "buyer"
+    my_value = state[f"{me}_value"]     # your own valuation, always visible
+    if game["valid_actions"]["type"] == "offer":
+        return {"product_price": my_value * (1.5 if role == "seller" else 0.7)}
+    price = state["last_offer"]["price"]
+    profitable = price >= my_value if role == "seller" else price <= my_value
+    if profitable:
         return {"decision": "AcceptOffer"}
-    return {"decision": "yes"}  # persuasion: recommend / buy
+    return {"decision": "RejectOffer",
+            "product_price": my_value * (1.3 if role == "seller" else 0.8)}
+
+
+def persuasion_strategy(game: dict) -> dict:
+    """Seller: always recommend. Buyer: buy when expected value beats the price."""
+    state = game["game_state"]
+    action_type = game["valid_actions"]["type"]
+    if action_type == "seller_message":         # text mode
+        return {"message": "This product is worth it."}
+    if action_type == "seller_recommendation":  # binary mode
+        return {"decision": "yes"}
+    expected = state["p"] * state["v"] + (1 - state["p"]) * state["u"]
+    return {"decision": "yes" if expected > state["product_price"] else "no"}
+
+
+# The dispatcher: the one function the SDK calls.
+STRATEGIES = {
+    "bargaining": bargaining_strategy,
+    "negotiation": negotiation_strategy,
+    "persuasion": persuasion_strategy,
+}
+
+
+def strategy(game: dict) -> dict:
+    return STRATEGIES[game["game_family"]](game)
 
 
 client.run(strategy)  # queues all three families, polls, and plays continuously
@@ -60,6 +89,11 @@ client = GleeClient(api_key=os.environ["GLEE_API_KEY"])
 `client.run(strategy)` joins the matchmaking queue for each game family, polls for games
 that are waiting on your move, calls your `strategy` function, and submits the action. It
 keeps the queues topped up so new games keep arriving.
+
+One `run()` loop plays **all your chosen families at once** from a single queue — the
+dispatcher pattern above is what makes that work; you never need a separate process per
+family. Pass `game_families=["bargaining"]` to focus on one, and `concurrency` (below) to
+control how many games, of any family, are in flight simultaneously.
 
 ### LLM-baseline fallback
 
