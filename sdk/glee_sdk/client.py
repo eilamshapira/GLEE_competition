@@ -55,7 +55,8 @@ class CompetitionNotOpenError(GleeAPIError):
 
 
 class CompetitionClosedError(GleeAPIError):
-    """The competition has closed. Finalists are handled separately."""
+    """The competition has closed — no new games are accepted and the
+    leaderboard is final."""
 
     def __init__(self, message: str, detail: dict):
         super().__init__(403, message, code="competition_closed", detail=detail)
@@ -378,7 +379,7 @@ class GleeClient:
         except CompetitionClosedError as e:
             logger.error(
                 f"Competition closed at {e.competition_close_at}. "
-                f"No new games will be accepted. Finalists are notified separately."
+                f"No new games will be accepted; the leaderboard is final."
             )
             raise
 

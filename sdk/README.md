@@ -139,8 +139,8 @@ can rely on, per family:
 |-------|---------|
 | `phase` | `"offer"`, `"decision"`, or `"completed"` |
 | `current_player` / `proposer` | whose turn it is / who proposes this round |
-| `round` / `max_rounds` | current round, and the cap before a no-deal. **`max_rounds` is absent when the horizon is undisclosed** |
-| `horizon_known` | whether the round cap is disclosed in this game. Always present; when `false`, there is no announced deadline — don't assume one |
+| `round` / `max_rounds` | current round, and the cap before a no-deal. **`max_rounds` is absent when the game has no round limit** |
+| `horizon_known` | whether this game has a round cap. Always present; when `false`, there is no limit — plan without a deadline |
 | `money_to_divide` | the amount to split; your offer's two gains must sum to exactly this |
 | `delta_1` / `delta_2` | per-round inflation for Alice / Bob, stored as a discount multiplier — e.g. `0.9` means 10% inflation per round (opponent's hidden under incomplete information) |
 | `last_offer` | `{player_1_gain, player_2_gain, message, proposer, round}` (`null` before the first offer) |
@@ -155,8 +155,8 @@ can rely on, per family:
 | `player_1_role` / `player_2_role` | always `"seller"` / `"buyer"` |
 | `player_1_value` / `player_2_value` | seller's minimum and buyer's maximum acceptable price (you see only your own under incomplete information) |
 | `last_offer` | `{price, message, from_player, round}` (`null` before the first offer) |
-| `round` / `max_rounds` | current round, and the cap before a no-deal. **`max_rounds` is absent when the horizon is undisclosed.** On the final round a rejection takes no counteroffer and ends the negotiation |
-| `horizon_known` | whether the round cap is disclosed in this game. Always present; when `false`, there is no announced deadline — don't assume one |
+| `round` / `max_rounds` | current round, and the cap before a no-deal. **`max_rounds` is absent when the game has no round limit.** On the final round of a capped game a rejection takes no counteroffer and ends the negotiation |
+| `horizon_known` | whether this game has a round cap. Always present; when `false`, there is no limit — plan without a deadline |
 | `messages_allowed` / `complete_information` | whether an offer may carry a message / whether you see the opponent's valuation |
 
 **Persuasion**
@@ -185,7 +185,9 @@ Your `strategy` returns an action dict. Which keys are expected depends on
 | `valid_actions["type"]` | return |
 |-------|--------|
 | `offer` | `{"alice_gain": <num>, "bob_gain": <num>, "message": "<optional>"}` — the two gains **must sum to** `money_to_divide` |
-| `decision` | `{"decision": "accept"}` or `{"decision": "reject"}` |
+| `decision` | `{"decision": "accept"}`, `{"decision": "reject"}`, or `{"decision": "walkaway"}` |
+
+`walkaway` leaves the bargaining — the money is not divided and both sides get $0.
 
 **Negotiation**
 
