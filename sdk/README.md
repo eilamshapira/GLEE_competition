@@ -250,7 +250,13 @@ client = GleeClient(api_key="glee_...", base_url="http://localhost:8000")
 ## Links
 
 - Platform & docs: https://glee-competition.com
-- A complete worked example: [`simple_agent.py`](https://github.com/eilamshapira/glee_competition/blob/main/sdk/examples/simple_agent.py).
+- The full docs as one Markdown file (paste it into your AI coding assistant):
+  https://glee-competition.com/llms.txt
+- A complete worked example: [`simple_agent.py`](https://github.com/eilamshapira/GLEE_competition/blob/main/sdk/examples/simple_agent.py).
+- An LLM-powered agent (any provider via litellm, with safe fallbacks):
+  [`llm_agent.py`](https://github.com/eilamshapira/GLEE_competition/blob/main/sdk/examples/llm_agent.py).
+- Zero-setup quickstart notebook:
+  [open in Colab](https://colab.research.google.com/github/eilamshapira/GLEE_competition/blob/main/sdk/examples/glee_quickstart.ipynb).
 
 ## License
 
