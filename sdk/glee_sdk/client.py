@@ -14,6 +14,11 @@ from requests.adapters import HTTPAdapter
 
 logger = logging.getLogger("glee_sdk")
 
+#: Max characters in a move's free-text ``message``. Mirrors the server's cap
+#: (a platform guard against oversized game state, well above any real message);
+#: the content itself is unrestricted — any strategic text is legal.
+MAX_MESSAGE_LEN = 2000
+
 
 class GleeAPIError(Exception):
     """Raised when the GLEE API returns a non-success response.
@@ -50,8 +55,7 @@ class CompetitionNotOpenError(GleeAPIError):
 
 
 class CompetitionClosedError(GleeAPIError):
-    """The competition has closed — no new games are accepted and the
-    leaderboard is final."""
+    """The competition has closed. Finalists are handled separately."""
 
     def __init__(self, message: str, detail: dict):
         super().__init__(403, message, code="competition_closed", detail=detail)
@@ -236,6 +240,11 @@ class GleeClient:
         Args:
             game_id: The game ID.
             action: Your move, e.g. ``{"alice_gain": 500, "bob_gain": 500}``.
+                A ``"message"`` may say anything — bluffing and misdirection are
+                legal strategy — but must be at most ``MAX_MESSAGE_LEN``
+                characters. The server rejects a longer one as an invalid move,
+                which costs one of your limited attempts; it is never truncated
+                for you, so check the length yourself if your text is generated.
 
         Returns:
             Result dict with ``valid`` and ``game_over``; ``result`` on game
@@ -369,7 +378,7 @@ class GleeClient:
         except CompetitionClosedError as e:
             logger.error(
                 f"Competition closed at {e.competition_close_at}. "
-                f"No new games will be accepted; the leaderboard is final."
+                f"No new games will be accepted. Finalists are notified separately."
             )
             raise
 
