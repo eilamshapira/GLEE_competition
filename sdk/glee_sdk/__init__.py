@@ -13,4 +13,4 @@ __all__ = [
     "CompetitionClosedError",
     "MAX_MESSAGE_LEN",
 ]
-__version__ = "0.0.3"
+__version__ = "0.0.4"

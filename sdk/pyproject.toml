@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "glee-sdk"
-version = "0.0.3"
+version = "0.0.4"
 description = "Python SDK for the GLEE Competition platform"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -32,8 +32,8 @@ dev = ["pytest", "build", "twine"]
 
 [project.urls]
 Homepage = "https://glee-competition.com"
-Documentation = "https://glee-competition.com"
-Repository = "https://github.com/eilamshapira/glee_competition"
+Documentation = "https://glee-competition.com/docs"
+Repository = "https://github.com/eilamshapira/GLEE_competition"
 
 [tool.setuptools]
 packages = ["glee_sdk"]

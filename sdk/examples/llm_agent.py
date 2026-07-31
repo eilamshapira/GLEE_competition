@@ -2,8 +2,9 @@
 
 This is the pattern most competitive agents start from: hand the model the
 game's own prompt plus the machine-readable state, ask for a JSON action, and
-never let a bad model response cost you the game — parse defensively and fall
-back to a safe valid move.
+never let a bad model response — or a hung provider call — cost you the game:
+parse defensively, cap each LLM call with a timeout, and fall back to a safe
+valid move.
 
 Works with any provider through litellm (https://docs.litellm.ai): set
 LLM_MODEL to any litellm model string and export that provider's API key.
@@ -110,7 +111,9 @@ def strategy(game: dict) -> dict:
     for attempt in range(2):
         text = ""
         try:
-            response = completion(model=MODEL, messages=messages)
+            # timeout=60 keeps a hanging provider call well inside the 120s
+            # turn clock, so the fallback below can still play a safe move.
+            response = completion(model=MODEL, messages=messages, timeout=60)
             text = response.choices[0].message.content or ""
             action = parse_action(text)
             logger.info("[%s] %s -> %s", game["game_family"], game["valid_actions"]["type"], action)

@@ -209,7 +209,7 @@ class GleeClient:
             Status dict from the server, or ``{}`` on servers without the
             endpoint.
         """
-        params = {"family": family} if family else None
+        params = {"game_family": family} if family else None
         try:
             return self._request("DELETE", "/queue", params=params)
         except GleeAPIError as e:
