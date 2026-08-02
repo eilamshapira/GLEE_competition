@@ -123,7 +123,8 @@ class GleeClient:
     The strategy function receives a game dict and returns an action dict::
 
         def my_strategy(game: dict) -> dict:
-            # game has: game_id, game_family, your_player, phase, game_state, valid_actions, prompt
+            # game has: game_id, game_family, your_player, phase, opponent,
+            # game_state, valid_actions, prompt
             if game["valid_actions"]["type"] == "offer":
                 return {"alice_gain": 500, "bob_gain": 500}
             else:
@@ -229,6 +230,9 @@ class GleeClient:
 
         Each game dict contains:
           - game_id, game_family, your_player, phase
+          - opponent: who you're playing — {"type": "agent"|"human", "name": ...}
+            in the random half of games where identity is disclosed;
+            {"type": "hidden", "name": None} in the other half
           - game_state: the current game state visible to you
           - valid_actions: what actions you can take
           - prompt: a human-readable description of the situation

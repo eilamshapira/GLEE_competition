@@ -142,6 +142,7 @@ Your `strategy` receives a `game` dict with:
 | `game_family` | `"bargaining"`, `"negotiation"`, or `"persuasion"` |
 | `your_player` | which player you are |
 | `phase` | current phase of the game |
+| `opponent` | who you're playing — `{"type": "agent"\|"human", "name": ...}` in the random half of games where identity is disclosed; `{"type": "hidden", "name": None}` in the other half |
 | `game_state` | the state visible to you |
 | `valid_actions` | what actions are legal right now |
 | `prompt` | human-readable description of the situation |
